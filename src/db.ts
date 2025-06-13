@@ -50,6 +50,21 @@ function initialiseSchema(db: Database.Database): void {
       tags       TEXT,
       created_at TEXT    NOT NULL DEFAULT (datetime('now'))
     );
+
+    /* ------------------------------------------------------------------
+     * A free-form todos table that allows the assistant to store arbitrary
+     * information about the user. Tags are persisted as a JSON-encoded
+     * array so that we have flexibility without needing migrations when we
+     * want to capture additional metadata in future.
+     * ----------------------------------------------------------------*/
+    CREATE TABLE IF NOT EXISTS todos (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      text       TEXT    NOT NULL,
+      due_date   TEXT,
+      tags       TEXT,
+      completed  INTEGER NOT NULL DEFAULT 0, -- 0 = incomplete, 1 = complete
+      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   /* ------------------------------------------------------------

@@ -15,6 +15,14 @@ interface NoteRow {
   tags: string | null;
 }
 
+type TodoRow = {
+  id: number;
+  text: string;
+  due_date: string | null;
+  tags: string | null;
+  completed: number; // 0 or 1
+};
+
 /**
  * The `user-summary` tool provides an overview of everything the assistant
  * knows about the user by pulling together goals and notes. The response is
@@ -39,6 +47,12 @@ export function registerUserSummary(
       )
       .all();
 
+    const todos = db
+      .prepare<[], TodoRow>(
+        "SELECT id, text, due_date, tags, completed FROM todos ORDER BY created_at DESC"
+      )
+      .all();
+
     const goalLines = goals.map((g) => {
       const status = g.completed ? "✓" : "✗";
       const due = g.due_date ? " (due " + g.due_date + ")" : "";
@@ -52,6 +66,12 @@ export function registerUserSummary(
       }`;
     });
 
+    const todoLines = todos.map((t) => {
+      const status = t.completed ? "✓" : "✗";
+      const due = t.due_date ? " (due " + t.due_date + ")" : "";
+      return `#${t.id}: ${t.text}${due} [${status}]`;
+    });
+
     const summaryParts: string[] = [];
 
     summaryParts.push(
@@ -63,6 +83,11 @@ export function registerUserSummary(
       notes.length > 0
         ? `Notes (total ${notes.length}):\n- ${noteLines.join("\n- ")}`
         : "No notes recorded."
+    );
+    summaryParts.push(
+      todos.length > 0
+        ? `Todos (total ${todos.length}):\n- ${todoLines.join("\n- ")}`
+        : "No todos set."
     );
 
     return {

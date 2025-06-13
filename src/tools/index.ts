@@ -9,6 +9,10 @@ import { registerUpdateNote } from "./updateNote.js";
 import { registerDeleteNote } from "./deleteNote.js";
 import { registerListNotes } from "./listNotes.js";
 import { registerUserSummary } from "./userSummary.js";
+import { registerAddTodo } from "./addTodo.js";
+import { registerDeleteTodo } from "./deleteTodo.js";
+import { registerListTodos } from "./listTodos.js";
+import { registerUpdateTodo } from "./updateTodo.js";
 
 /**
  * Register all Tools with the given MCP server instance.
@@ -23,4 +27,8 @@ export function registerTools(server: McpServer, config: CoachConfig): void {
   registerDeleteNote(server, config);
   registerListNotes(server, config);
   registerUserSummary(server, config);
+  registerAddTodo(server, config);
+  registerDeleteTodo(server, config);
+  registerListTodos(server, config);
+  registerUpdateTodo(server, config);
 }
