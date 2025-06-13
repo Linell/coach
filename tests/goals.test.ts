@@ -6,6 +6,13 @@ import { registerAddGoal } from "../src/tools/addGoal";
 import { registerUpdateGoal } from "../src/tools/updateGoal";
 import { registerListGoals } from "../src/tools/listGoals";
 import type { CoachConfig } from "../src/config";
+import type { GoalRow } from "../src/types";
+
+// Declare global type for database connection
+declare global {
+  // eslint-disable-next-line no-var
+  var __coachDb: import("better-sqlite3").Database | undefined;
+}
 
 /** A minimal stub of the MCP server that only implements the `tool` method. */
 class StubServer {
@@ -35,6 +42,11 @@ describe("Goal tools", () => {
   });
 
   afterEach(async () => {
+    // Close the database connection and clear global state
+    if (globalThis.__coachDb) {
+      globalThis.__coachDb.close();
+      globalThis.__coachDb = undefined;
+    }
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -43,8 +55,12 @@ describe("Goal tools", () => {
     await handler({ goal: "Finish report" });
 
     const db = getDb(config.database_path);
-    const row = db.prepare("SELECT completed FROM goals WHERE id = 1").get();
-    expect(row.completed).toBe(0);
+    const row = db
+      .prepare<[], Pick<GoalRow, "completed">>(
+        "SELECT completed FROM goals WHERE id = 1"
+      )
+      .get();
+    expect(row?.completed).toBe(0);
   });
 
   it("can mark a goal as completed via update-goal", async () => {
@@ -54,8 +70,12 @@ describe("Goal tools", () => {
     await server.handlers["update-goal"]({ id: 1, completed: true });
 
     const db = getDb(config.database_path);
-    const row = db.prepare("SELECT completed FROM goals WHERE id = 1").get();
-    expect(row.completed).toBe(1);
+    const row = db
+      .prepare<[], Pick<GoalRow, "completed">>(
+        "SELECT completed FROM goals WHERE id = 1"
+      )
+      .get();
+    expect(row?.completed).toBe(1);
   });
 
   it("list-goals indicates completion status", async () => {

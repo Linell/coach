@@ -1,12 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-
-type GoalRow = {
-  id: number;
-  text: string;
-  completed: number; // 0 or 1
-};
+import type { GoalRow } from "../types.js";
 
 export function registerListGoals(
   server: McpServer,

@@ -86,6 +86,6 @@ function initialiseSchema(db: Database.Database): void {
 // Augment the global object so we can cache the singleton connection without
 // polluting the module namespace.
 declare global {
-  // eslint-disable-next-line no-var, @typescript-eslint/no-explicit-any
+   
   var __coachDb: Database.Database | undefined;
 }

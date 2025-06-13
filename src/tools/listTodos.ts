@@ -1,14 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-
-type TodoRow = {
-  id: number;
-  text: string;
-  due_date: string | null;
-  tags: string | null;
-  completed: number; // 0 or 1
-};
+import type { TodoRow } from "../types.js";
 
 export function registerListTodos(
   server: McpServer,

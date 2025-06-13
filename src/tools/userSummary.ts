@@ -1,27 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-
-interface GoalRow {
-  id: number;
-  text: string;
-  due_date: string | null;
-  completed: number;
-}
-
-interface NoteRow {
-  id: number;
-  text: string;
-  tags: string | null;
-}
-
-type TodoRow = {
-  id: number;
-  text: string;
-  due_date: string | null;
-  tags: string | null;
-  completed: number; // 0 or 1
-};
+import type { NoteRow, TodoRow, GoalRow } from "../types.js";
 
 /**
  * The `user-summary` tool provides an overview of everything the assistant

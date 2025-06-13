@@ -2,12 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-
-interface NoteRow {
-  id: number;
-  text: string;
-  tags: string | null;
-}
+import type { NoteRow } from "../types.js";
 
 /**
  * Registers the `list-notes` tool. Notes can be optionally filtered by a tag.

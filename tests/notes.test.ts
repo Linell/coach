@@ -6,6 +6,12 @@ import { registerListNotes } from "../src/tools/listNotes";
 import { registerDeleteNote } from "../src/tools/deleteNote";
 import type { CoachConfig } from "../src/config";
 
+// Declare global type for database connection
+declare global {
+  // eslint-disable-next-line no-var
+  var __coachDb: import("better-sqlite3").Database | undefined;
+}
+
 class StubServer {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handlers: Record<string, any> = {};
@@ -31,6 +37,11 @@ describe("Note tools", () => {
   });
 
   afterEach(async () => {
+    // Close the database connection and clear global state
+    if (globalThis.__coachDb) {
+      globalThis.__coachDb.close();
+      globalThis.__coachDb = undefined;
+    }
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 

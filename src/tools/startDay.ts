@@ -2,30 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-
-interface NoteRow {
-  id: number;
-  text: string;
-  tags: string | null;
-  created_at: string;
-}
-
-interface TodoRow {
-  id: number;
-  text: string;
-  due_date: string | null;
-  tags: string | null;
-  completed: number;
-  created_at: string;
-}
-
-interface GoalRow {
-  id: number;
-  text: string;
-  due_date: string | null;
-  completed: number;
-  created_at: string;
-}
+import type { NoteRow, TodoRow, GoalRow } from "../types.js";
 
 /**
  * Registers the `start-day` tool which provides context for starting a new day

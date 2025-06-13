@@ -2,30 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-
-interface GoalRow {
-  id: number;
-  text: string;
-  due_date: string | null;
-  completed: number;
-  created_at: string;
-}
-
-interface NoteRow {
-  id: number;
-  text: string;
-  tags: string | null;
-  created_at: string;
-}
-
-interface TodoRow {
-  id: number;
-  text: string;
-  due_date: string | null;
-  tags: string | null;
-  completed: number;
-  created_at: string;
-}
+import type { NoteRow, TodoRow, GoalRow } from "../types.js";
 
 /**
  * Registers the `recap-day` tool which creates a comprehensive summary of
@@ -45,11 +22,6 @@ export function registerRecapDay(server: McpServer, config: CoachConfig): void {
     },
     async ({ date }) => {
       const targetDate = date || new Date().toISOString().split("T")[0];
-      const nextDate = new Date(
-        new Date(targetDate).getTime() + 24 * 60 * 60 * 1000
-      )
-        .toISOString()
-        .split("T")[0];
 
       // Get all items created on the target date
       const goals = db
