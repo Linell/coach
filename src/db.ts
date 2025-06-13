@@ -34,9 +34,38 @@ function initialiseSchema(db: Database.Database): void {
       text       TEXT    NOT NULL,
       due_date   TEXT,
       metadata   TEXT,
+      completed  INTEGER NOT NULL DEFAULT 0, -- 0 = incomplete, 1 = complete
+      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
+    /* ------------------------------------------------------------------
+     * A free-form notes table that allows the assistant to store arbitrary
+     * information about the user. Tags are persisted as a JSON-encoded
+     * array so that we have flexibility without needing migrations when we
+     * want to capture additional metadata in future.
+     * ----------------------------------------------------------------*/
+    CREATE TABLE IF NOT EXISTS notes (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      text       TEXT    NOT NULL,
+      tags       TEXT,
       created_at TEXT    NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  /* ------------------------------------------------------------
+   * Lightweight migration: ensure the `completed` column exists
+   * for users who created the database before this column was
+   * introduced. SQLite supports adding columns via ALTER TABLE.
+   * ----------------------------------------------------------*/
+  const cols = db
+    .prepare<[], { name: string }>("PRAGMA table_info(goals)")
+    .all();
+  const hasCompleted = cols.some((c) => c.name === "completed");
+  if (!hasCompleted) {
+    db.exec(
+      "ALTER TABLE goals ADD COLUMN completed INTEGER NOT NULL DEFAULT 0"
+    );
+  }
 }
 
 // Augment the global object so we can cache the singleton connection without

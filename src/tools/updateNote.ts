@@ -4,25 +4,23 @@ import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
 
 /**
- * Registers the `update-goal` tool which allows the user to update the text,
- * due-date or metadata for an existing goal identified by its numeric id.
+ * Registers the `update-note` tool which allows updating the text and/or tags
+ * of a note identified by its numeric id.
  */
-export function registerUpdateGoal(
+export function registerUpdateNote(
   server: McpServer,
   config: CoachConfig
 ): void {
   const db = getDb(config.database_path);
 
   server.tool(
-    "update-goal",
+    "update-note",
     {
       id: z.number().int().positive(),
       text: z.string().min(3).optional(),
-      due_date: z.string().optional(),
-      metadata: z.record(z.unknown()).optional(),
-      completed: z.boolean().optional(),
+      tags: z.array(z.string()).optional(),
     },
-    async ({ id, text, due_date, metadata, completed }) => {
+    async ({ id, text, tags }) => {
       const updates: string[] = [];
       const values: unknown[] = [];
 
@@ -30,17 +28,9 @@ export function registerUpdateGoal(
         updates.push("text = ?");
         values.push(text);
       }
-      if (due_date !== undefined) {
-        updates.push("due_date = ?");
-        values.push(due_date);
-      }
-      if (metadata !== undefined) {
-        updates.push("metadata = ?");
-        values.push(JSON.stringify(metadata));
-      }
-      if (completed !== undefined) {
-        updates.push("completed = ?");
-        values.push(completed ? 1 : 0);
+      if (tags !== undefined) {
+        updates.push("tags = ?");
+        values.push(JSON.stringify(tags));
       }
 
       if (updates.length === 0) {
@@ -54,10 +44,9 @@ export function registerUpdateGoal(
         };
       }
 
-      // Add id for the WHERE clause
       values.push(id);
       const stmt = db.prepare(
-        `UPDATE goals SET ${updates.join(", ")} WHERE id = ?`
+        `UPDATE notes SET ${updates.join(", ")} WHERE id = ?`
       );
       const info = stmt.run(...values);
 
@@ -66,7 +55,7 @@ export function registerUpdateGoal(
           content: [
             {
               type: "text",
-              text: `No goal found with id ${id}.`,
+              text: `No note found with id ${id}.`,
             },
           ],
         };
@@ -76,7 +65,7 @@ export function registerUpdateGoal(
         content: [
           {
             type: "text",
-            text: `Goal ${id} updated successfully.`,
+            text: `Note ${id} updated successfully.`,
           },
         ],
       };
