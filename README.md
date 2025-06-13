@@ -63,6 +63,35 @@ Feel free to extend this as your project grows.
 2. Register tools, resources and prompts with your `McpServer` instance.
 3. Add integration/end-to-end tests as features are implemented.
 
+## Using with Claude Desktop
+
+Claude Desktop (or other MCP-aware clients) discovers servers from its own configuration file. Add a new entry that launches this server via Node JS:
+
+```jsonc
+{
+  "mcpServers": {
+    // keep any existing entries …
+    "Coach": {
+      "command": "node",
+      "args": [
+        "/Users/linell/Documents/dev/coach/dist/index.js" // path to compiled entry
+      ]
+    }
+  }
+}
+```
+
+Tips:
+1. In development you can point the command directly at `ts-node-esm`:
+   ```jsonc
+   "command": "npx",
+   "args": ["ts-node-esm", "src/index.ts"]
+   ```
+2. Make sure you run `npm run build` whenever you change TypeScript so the compiled JS stays up-to-date if you reference `dist/`.
+3. Restart Claude Desktop after editing the file so it reloads the server list.
+
+With that entry in place Claude Desktop will list **Coach** as an available local server, exposing the example daily-tip resource, add-goal tool, and daily-reflection prompt.
+
 ---
 
-© MIT License 
+© MIT License
