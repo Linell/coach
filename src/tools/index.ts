@@ -13,6 +13,9 @@ import { registerAddTodo } from "./addTodo.js";
 import { registerDeleteTodo } from "./deleteTodo.js";
 import { registerListTodos } from "./listTodos.js";
 import { registerUpdateTodo } from "./updateTodo.js";
+import { registerRememberConvo } from "./rememberConvo.js";
+import { registerRecapDay } from "./recapDay.js";
+import { registerStartDay } from "./startDay.js";
 
 /**
  * Register all Tools with the given MCP server instance.
@@ -31,4 +34,7 @@ export function registerTools(server: McpServer, config: CoachConfig): void {
   registerDeleteTodo(server, config);
   registerListTodos(server, config);
   registerUpdateTodo(server, config);
+  registerRememberConvo(server, config);
+  registerRecapDay(server, config);
+  registerStartDay(server, config);
 }
