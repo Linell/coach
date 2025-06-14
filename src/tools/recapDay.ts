@@ -2,7 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-import type { NoteRow, TodoRow, GoalRow } from "../types.js";
+import type {
+  NoteRow,
+  TodoRow,
+  GoalRow,
+  WorkoutRow,
+  ExerciseRow,
+} from "../types.js";
 
 /**
  * Registers the `recap-day` tool which creates a comprehensive summary of
@@ -50,6 +56,43 @@ export function registerRecapDay(server: McpServer, config: CoachConfig): void {
            ORDER BY created_at DESC`
         )
         .all(targetDate);
+
+      // Get workouts from the target date
+      const workouts = db
+        .prepare<[string], WorkoutRow>(
+          `SELECT id, type, date, duration_mins, distance_miles, avg_heart_rate, rpe, notes, created_at 
+           FROM workouts 
+           WHERE date = ? 
+           ORDER BY created_at DESC`
+        )
+        .all(targetDate);
+
+      // Get exercises for functional workouts
+      const exerciseMap = new Map<number, ExerciseRow[]>();
+      if (workouts.some((w) => w.type === "functional")) {
+        const workoutIds = workouts
+          .filter((w) => w.type === "functional")
+          .map((w) => w.id);
+        if (workoutIds.length > 0) {
+          const exercises = db
+            .prepare<any[], ExerciseRow>(
+              `
+              SELECT id, workout_id, name, sets, reps, weight_lbs, rest_sec, notes
+              FROM exercises 
+              WHERE workout_id IN (${workoutIds.map(() => "?").join(",")})
+              ORDER BY id ASC
+            `
+            )
+            .all(...workoutIds);
+
+          exercises.forEach((ex) => {
+            if (!exerciseMap.has(ex.workout_id)) {
+              exerciseMap.set(ex.workout_id, []);
+            }
+            exerciseMap.get(ex.workout_id)!.push(ex);
+          });
+        }
+      }
 
       // For simplicity, we'll focus on items created on the target date
       // The completed status will be checked in the items we already retrieved
@@ -138,6 +181,44 @@ export function registerRecapDay(server: McpServer, config: CoachConfig): void {
         });
       }
 
+      // Workouts section
+      if (workouts.length > 0) {
+        recapSections.push(`\n## Fitness & Workouts (${workouts.length})`);
+        workouts.forEach((w) => {
+          const metrics: string[] = [];
+          if (w.duration_mins) metrics.push(`${w.duration_mins} minutes`);
+          if (w.distance_miles) metrics.push(`${w.distance_miles} miles`);
+          if (w.avg_heart_rate) metrics.push(`${w.avg_heart_rate} BPM avg`);
+          if (w.rpe) metrics.push(`RPE ${w.rpe}/10`);
+
+          let workoutText = `- #${w.id}: ${w.type.toUpperCase()}`;
+          if (metrics.length > 0) {
+            workoutText += ` (${metrics.join(", ")})`;
+          }
+
+          if (w.notes) {
+            workoutText += ` - ${w.notes}`;
+          }
+
+          recapSections.push(workoutText);
+
+          // Add exercises for functional workouts
+          if (w.type === "functional" && exerciseMap.has(w.id)) {
+            const exercises = exerciseMap.get(w.id)!;
+            exercises.forEach((ex, i) => {
+              let exText = `    ${i + 1}. ${ex.name}`;
+              const exDetails: string[] = [];
+              if (ex.sets && ex.reps) exDetails.push(`${ex.sets}x${ex.reps}`);
+              if (ex.weight_lbs) exDetails.push(`${ex.weight_lbs} lbs`);
+              if (exDetails.length > 0) {
+                exText += ` - ${exDetails.join(", ")}`;
+              }
+              recapSections.push(exText);
+            });
+          }
+        });
+      }
+
       // Conversations section
       if (conversations.length > 0) {
         recapSections.push(
@@ -149,7 +230,8 @@ export function registerRecapDay(server: McpServer, config: CoachConfig): void {
       }
 
       // Summary stats
-      const totalItems = goals.length + todos.length + notes.length;
+      const totalItems =
+        goals.length + todos.length + notes.length + workouts.length;
       const completedItems =
         goals.filter((g) => g.completed).length +
         todos.filter((t) => t.completed).length +
@@ -160,6 +242,23 @@ export function registerRecapDay(server: McpServer, config: CoachConfig): void {
         recapSections.push(`\n## Daily Summary`);
         recapSections.push(`- Total new items: ${totalItems}`);
         recapSections.push(`- Items completed: ${completedItems}`);
+        if (workouts.length > 0) {
+          const totalWorkoutTime = workouts.reduce(
+            (sum, w) => sum + (w.duration_mins || 0),
+            0
+          );
+          const totalDistance = workouts.reduce(
+            (sum, w) => sum + (w.distance_miles || 0),
+            0
+          );
+          recapSections.push(`- Workouts completed: ${workouts.length}`);
+          if (totalWorkoutTime > 0)
+            recapSections.push(
+              `- Total workout time: ${totalWorkoutTime} minutes`
+            );
+          if (totalDistance > 0)
+            recapSections.push(`- Total distance: ${totalDistance} miles`);
+        }
         recapSections.push(
           `- Productivity score: ${
             totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
@@ -185,11 +284,14 @@ export function registerRecapDay(server: McpServer, config: CoachConfig): void {
         };
       }
 
+      const workoutSummary =
+        workouts.length > 0 ? `\n- ${workouts.length} workouts completed` : "";
+
       return {
         content: [
           {
             type: "text",
-            text: `✓ Daily recap for ${targetDate} complete!\n\nSummary:\n- ${totalItems} total activities\n- ${completedItems} items completed\n- ${conversations.length} conversations recorded\n\nI've saved a detailed recap as a note tagged with "recap" and "date-${targetDate}". You can review it anytime or use it with the start-day tool tomorrow.`,
+            text: `✓ Daily recap for ${targetDate} complete!\n\nSummary:\n- ${totalItems} total activities\n- ${completedItems} items completed${workoutSummary}\n- ${conversations.length} conversations recorded\n\nI've saved a detailed recap as a note tagged with "recap" and "date-${targetDate}". You can review it anytime or use it with the start-day tool tomorrow.`,
           },
         ],
       };

@@ -27,3 +27,26 @@ export interface GoalRow {
   completed: number; // 0 = incomplete, 1 = complete
   created_at: string;
 }
+
+export interface WorkoutRow {
+  id: number;
+  type: string; // 'running', 'cycling', 'functional'
+  date: string;
+  duration_mins: number | null;
+  distance_miles: number | null;
+  avg_heart_rate: number | null;
+  rpe: number | null; // rate of perceived exertion (1-10)
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ExerciseRow {
+  id: number;
+  workout_id: number;
+  name: string;
+  sets: number | null;
+  reps: string | null; // flexible format: "10,10,8" or "10x3"
+  weight_lbs: number | null;
+  rest_sec: number | null;
+  notes: string | null;
+}

@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-import type { NoteRow, TodoRow, GoalRow } from "../types.js";
+import type { NoteRow, TodoRow, GoalRow, WorkoutRow } from "../types.js";
 
 /**
  * The `user-summary` tool provides an overview of everything the assistant
@@ -33,6 +33,12 @@ export function registerUserSummary(
       )
       .all();
 
+    const workouts = db
+      .prepare<[], WorkoutRow>(
+        "SELECT id, type, date, duration_mins, distance_miles, avg_heart_rate, rpe, notes FROM workouts ORDER BY date DESC LIMIT 10"
+      )
+      .all();
+
     const goalLines = goals.map((g) => {
       const status = g.completed ? "✓" : "✗";
       const due = g.due_date ? " (due " + g.due_date + ")" : "";
@@ -52,6 +58,16 @@ export function registerUserSummary(
       return `#${t.id}: ${t.text}${due} [${status}]`;
     });
 
+    const workoutLines = workouts.map((w) => {
+      const metrics: string[] = [];
+      if (w.duration_mins) metrics.push(`${w.duration_mins}min`);
+      if (w.distance_miles) metrics.push(`${w.distance_miles}mi`);
+      if (w.avg_heart_rate) metrics.push(`${w.avg_heart_rate}BPM`);
+      if (w.rpe) metrics.push(`RPE${w.rpe}`);
+      const metricStr = metrics.length > 0 ? ` (${metrics.join(", ")})` : "";
+      return `#${w.id}: ${w.type.toUpperCase()} on ${w.date}${metricStr}`;
+    });
+
     const summaryParts: string[] = [];
 
     summaryParts.push(
@@ -68,6 +84,13 @@ export function registerUserSummary(
       todos.length > 0
         ? `Todos (total ${todos.length}):\n- ${todoLines.join("\n- ")}`
         : "No todos set."
+    );
+    summaryParts.push(
+      workouts.length > 0
+        ? `Recent Workouts (last ${workouts.length}):\n- ${workoutLines.join(
+            "\n- "
+          )}`
+        : "No workouts recorded."
     );
 
     return {

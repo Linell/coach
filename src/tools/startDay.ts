@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CoachConfig } from "../config.js";
 import { getDb } from "../db.js";
-import type { NoteRow, TodoRow, GoalRow } from "../types.js";
+import type { NoteRow, TodoRow, GoalRow, WorkoutRow } from "../types.js";
 
 /**
  * Registers the `start-day` tool which provides context for starting a new day
@@ -74,6 +74,17 @@ export function registerStartDay(server: McpServer, config: CoachConfig): void {
            AND (tags IS NULL OR tags NOT LIKE '%"recap"%')
            ORDER BY created_at DESC 
            LIMIT 10`
+        )
+        .all(lookbackDate);
+
+      // Get recent workouts for fitness context
+      const recentWorkouts = db
+        .prepare<[string], WorkoutRow>(
+          `SELECT id, type, date, duration_mins, distance_miles, avg_heart_rate, rpe, notes
+           FROM workouts 
+           WHERE date >= ? 
+           ORDER BY date DESC 
+           LIMIT 5`
         )
         .all(lookbackDate);
 
@@ -237,6 +248,78 @@ export function registerStartDay(server: McpServer, config: CoachConfig): void {
         });
       }
 
+      // Fitness context
+      if (recentWorkouts.length > 0) {
+        briefingSections.push(
+          `\n## 💪 Recent Fitness Activity (Last ${lookback_days} Days)`
+        );
+
+        // Calculate workout streak
+        const sortedWorkouts = [...recentWorkouts].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        let streak = 0;
+        let checkDate = new Date(today);
+
+        for (let i = 0; i < 7; i++) {
+          // Check up to 7 days back
+          const dateStr = checkDate.toISOString().split("T")[0];
+          const hasWorkout = sortedWorkouts.some((w) => w.date === dateStr);
+          if (hasWorkout) {
+            streak++;
+          } else if (streak === 0) {
+            // If no workout today, don't count as breaking streak yet
+            if (dateStr !== today) break;
+          } else {
+            break;
+          }
+          checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        if (streak > 0) {
+          briefingSections.push(`🔥 Current workout streak: ${streak} days!`);
+        }
+
+        briefingSections.push(`Recent workouts:`);
+        recentWorkouts.forEach((w) => {
+          const metrics: string[] = [];
+          if (w.duration_mins) metrics.push(`${w.duration_mins}min`);
+          if (w.distance_miles) metrics.push(`${w.distance_miles}mi`);
+          if (w.rpe) metrics.push(`RPE${w.rpe}`);
+          const metricStr =
+            metrics.length > 0 ? ` (${metrics.join(", ")})` : "";
+          briefingSections.push(
+            `- ${w.date}: ${w.type.toUpperCase()}${metricStr}`
+          );
+        });
+
+        // Fitness motivation based on recent activity
+        const lastWorkout = sortedWorkouts[0];
+        const daysSinceLastWorkout = Math.floor(
+          (new Date(today).getTime() - new Date(lastWorkout.date).getTime()) /
+            (24 * 60 * 60 * 1000)
+        );
+
+        if (daysSinceLastWorkout === 0) {
+          briefingSections.push(
+            `\n💡 You've already worked out today - amazing consistency!`
+          );
+        } else if (daysSinceLastWorkout === 1) {
+          briefingSections.push(
+            `\n💡 You worked out yesterday - great momentum! Consider maintaining it today.`
+          );
+        } else if (daysSinceLastWorkout >= 2) {
+          briefingSections.push(
+            `\n💡 It's been ${daysSinceLastWorkout} days since your last workout. Today could be perfect for getting back into it!`
+          );
+        }
+      } else {
+        briefingSections.push(`\n## 💪 Fitness Opportunity`);
+        briefingSections.push(
+          `No recent workouts recorded. Today could be a great day to start or restart your fitness journey!`
+        );
+      }
+
       // Summary stats
       const totalPending = pendingTodos.length + activeGoals.length;
       const urgentCount =
@@ -251,6 +334,9 @@ export function registerStartDay(server: McpServer, config: CoachConfig): void {
       briefingSections.push(
         `- Recent notes for context: ${recentNotes.length}`
       );
+      if (recentWorkouts.length > 0) {
+        briefingSections.push(`- Recent workouts: ${recentWorkouts.length}`);
+      }
 
       // Motivational close
       if (urgentCount > 0) {

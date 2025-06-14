@@ -16,6 +16,11 @@ import { registerUpdateTodo } from "./updateTodo.js";
 import { registerRememberConvo } from "./rememberConvo.js";
 import { registerRecapDay } from "./recapDay.js";
 import { registerStartDay } from "./startDay.js";
+import { registerAddWorkout } from "./addWorkout.js";
+import { registerListWorkouts } from "./listWorkouts.js";
+import { registerUpdateWorkout } from "./updateWorkout.js";
+import { registerDeleteWorkout } from "./deleteWorkout.js";
+import { registerWorkoutStats } from "./workoutStats.js";
 
 /**
  * Register all Tools with the given MCP server instance.
@@ -37,4 +42,9 @@ export function registerTools(server: McpServer, config: CoachConfig): void {
   registerRememberConvo(server, config);
   registerRecapDay(server, config);
   registerStartDay(server, config);
+  registerAddWorkout(server, config);
+  registerListWorkouts(server, config);
+  registerUpdateWorkout(server, config);
+  registerDeleteWorkout(server, config);
+  registerWorkoutStats(server, config);
 }

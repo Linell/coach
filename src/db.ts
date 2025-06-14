@@ -65,6 +65,39 @@ function initialiseSchema(db: Database.Database): void {
       completed  INTEGER NOT NULL DEFAULT 0, -- 0 = incomplete, 1 = complete
       created_at TEXT    NOT NULL DEFAULT (datetime('now'))
     );
+
+    /* ------------------------------------------------------------------
+     * Workouts table for tracking fitness activities. Supports different
+     * workout types (running, cycling, functional fitness) with flexible
+     * JSON metadata for type-specific data.
+     * ----------------------------------------------------------------*/
+    CREATE TABLE IF NOT EXISTS workouts (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      type            TEXT    NOT NULL, -- 'running', 'cycling', 'functional'
+      date            TEXT    NOT NULL,
+      duration_mins   INTEGER, -- workout duration in minutes
+      distance_miles  REAL,    -- distance in miles (for cardio)
+      avg_heart_rate  INTEGER, -- average heart rate in BPM
+      rpe             INTEGER, -- rate of perceived exertion (1-10)
+      notes           TEXT,    -- free-form notes about the workout
+      created_at      TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+
+    /* ------------------------------------------------------------------
+     * Exercises table for detailed tracking of individual exercises within
+     * functional fitness workouts. Links to workouts via workout_id.
+     * ----------------------------------------------------------------*/
+    CREATE TABLE IF NOT EXISTS exercises (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      workout_id  INTEGER NOT NULL,
+      name        TEXT    NOT NULL, -- exercise name (e.g., "Kettlebell Swings")
+      sets        INTEGER,          -- number of sets
+      reps        TEXT,             -- reps per set (could be "10,10,8" or "10x3")
+             weight_lbs  REAL,             -- weight used in pounds
+      rest_sec    INTEGER,          -- rest time between sets in seconds
+      notes       TEXT,             -- exercise-specific notes
+      FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
+    );
   `);
 
   /* ------------------------------------------------------------
@@ -86,6 +119,5 @@ function initialiseSchema(db: Database.Database): void {
 // Augment the global object so we can cache the singleton connection without
 // polluting the module namespace.
 declare global {
-   
   var __coachDb: Database.Database | undefined;
 }
