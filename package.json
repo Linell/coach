@@ -1,18 +1,46 @@
 {
-  "name": "coach",
+  "name": "coach-mcp-server",
   "version": "0.1.0",
-  "description": "Foundation for a Model Context Protocol server",
+  "description": "An AI-powered life coach MCP server that helps track goals, todos, notes, and provides daily guidance through structured prompts and tools",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "coach-mcp-server": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "ts-node-esm src/index.ts",
     "start": "node dist/index.js",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "test": "jest"
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "coach",
+    "life-coach",
+    "productivity",
+    "goals",
+    "todos",
+    "claude",
+    "assistant",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Linell/coach-mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/Linell/coach-mcp-server/issues"
+  },
+  "homepage": "https://github.com/Linell/coach-mcp-server#readme",
+  "author": "Linell Bonnette",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
