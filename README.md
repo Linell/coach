@@ -143,6 +143,10 @@ Your data is all stored in a **single SQLite file** that you completely control.
 
 **View your data directly:**
 ```bash
+# Quick access via npm script (uses your configured database path)
+npm run dbconsole
+
+# Or access directly
 sqlite3 ~/.local/share/coach/coach.sqlite
 
 .schema                    # View table structure

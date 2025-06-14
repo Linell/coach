@@ -17,6 +17,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "clean": "rm -rf dist",
+    "dbconsole": "node scripts/dbconsole.js",
     "prepublishOnly": "npm run clean && npm run build && npm test"
   },
   "keywords": [
