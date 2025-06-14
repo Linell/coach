@@ -43,8 +43,8 @@ A **local-first** AI-powered life coach Model Context Protocol (MCP) server that
 
 ```bash
 # Clone the repository
-git clone https://github.com/Linell/coach-mcp-server.git
-cd coach-mcp-server
+git clone https://github.com/Linell/coach.git
+cd coach
 
 # Install dependencies
 npm install
@@ -54,19 +54,6 @@ npm run build
 
 # Run tests to verify installation
 npm test
-```
-
-### Development
-
-```bash
-# Run in development mode (with hot reload)
-npm run dev
-
-# Run linter
-npm run lint
-
-# Run tests with coverage
-npm run test:coverage
 ```
 
 ## 📖 Usage
@@ -80,7 +67,7 @@ Add the following to your Claude Desktop MCP configuration file:
   "mcpServers": {
     "coach": {
       "command": "node",
-      "args": ["/path/to/coach-mcp-server/dist/index.js"]
+      "args": ["/path/to/coach/dist/index.js"]
     }
   }
 }
@@ -89,7 +76,21 @@ Add the following to your Claude Desktop MCP configuration file:
 **Development tip**: For active development, you can point directly to the TypeScript source:
 ```jsonc
 "command": "npx",
-"args": ["ts-node-esm", "/path/to/coach-mcp-server/src/index.ts"]
+"args": ["ts-node-esm", "/path/to/coach/src/index.ts"]
+```
+
+
+### Development
+
+```bash
+# Run in development mode (with hot reload)
+npm run dev
+
+# Run linter
+npm run lint
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ## 🏠 Local-First Configuration & Data
@@ -259,9 +260,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/Linell/coach-mcp-server/issues)
-- 💡 **Feature Requests**: [Request a feature](https://github.com/Linell/coach-mcp-server/issues)
-- 💬 **Questions**: [Start a discussion](https://github.com/Linell/coach-mcp-server/discussions)
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/Linell/coach/issues)
+- 💡 **Feature Requests**: [Request a feature](https://github.com/Linell/coach/issues)
+- 💬 **Questions**: [Start a discussion](https://github.com/Linell/coach/discussions)
 
 ---
 
